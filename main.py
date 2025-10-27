@@ -1,4 +1,4 @@
-from alphabeta import ConnectFour, max_value, min_value
+from alphabeta import ConnectFour, max_value, min_value, alpha_beta_value
 
 """
     play(state): makes turn and prints the result of it until the game is over
@@ -8,6 +8,10 @@ from alphabeta import ConnectFour, max_value, min_value
     max_value(node, alpha, beta): implements the MinMax algorithm with alpha-beta pruning
     min_value(node, alpha, beta):implements the MinMax algorithm with alpha-beta pruning
     
+    nextmove(state): determines the next move for the current player and prints it with stats
+    for visited nodes and pruned nodes.
+
+
     currently main tests the tictactoe with a hard-coded test board. Future plans include adding
     a heuristic evaluation for non-terminal states and using a depth limit for the search.
     
@@ -35,6 +39,13 @@ def play(state):
         print(value)
     
 
+def nextmove(state):
+    """Determines the next move for the current player."""
+    alpha = -1
+    beta = 1
+    value, new_state = alpha_beta_value(state, alpha, beta)
+    print("\nNext move:\n")
+    print(new_state, value)
 
 
 def main():
@@ -43,7 +54,8 @@ def main():
     test_board = "xo?o?o?x?xo?xx???o??x?x?x"
 
     state = ConnectFour(test_board, True)
-    play(state)
+    nextmove(state)
+#    play(state)
 
 if __name__ == "__main__":
     print("Starting main.py")

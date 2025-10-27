@@ -114,12 +114,18 @@ class ConnectFour(AlphaBetaNode):
                 return 1
             else:
                 return 0
-        
+
+nodes_visited = 0
+nodes_pruned = 0
+
+
 def max_value(node, alpha, beta):
     """
     Returns (value, best_child_state) for maximizing player (x).
     """
+    global nodes_visited, nodes_pruned
     if node.is_end_state():
+        nodes_visited += 1
         return node.value(), node
     v = -float('inf')
     best_state = None
@@ -130,6 +136,7 @@ def max_value(node, alpha, beta):
             best_state = child
         alpha = max(alpha, v)
         if alpha >= beta:
+            nodes_pruned += 1
             break  # beta-cutoff
     return v, best_state
 
@@ -137,7 +144,9 @@ def min_value(node, alpha, beta):
     """
     Returns (value, best_child_state) for minimizing player (o).
     """
+    global nodes_visited, nodes_pruned
     if node.is_end_state():
+        nodes_visited += 1
         return node.value(), node
     v = float('inf')
     best_state = None
@@ -148,6 +157,7 @@ def min_value(node, alpha, beta):
             best_state = child
         beta = min(beta, v)
         if beta <= alpha:
+            nodes_pruned += 1
             break  # alpha-cutoff
     return v, best_state
 
@@ -155,7 +165,15 @@ def alpha_beta_value(node, alpha=-float('inf'), beta=float('inf')):
     """
     Wrapper: returns (value, best_child_state) depending on whose turn it is.
     """
+    global nodes_visited, nodes_pruned
+    nodes_visited = 0
+    nodes_pruned = 0
+
     if node.is_max_node():
-        return max_value(node, alpha, beta)
+        result = max_value(node, alpha, beta)
     else:
-        return min_value(node, alpha, beta)
+        result = min_value(node, alpha, beta)
+
+    print(f"AlphaBeta stats -> nodes_visited: {nodes_visited}, nodes_pruned: {nodes_pruned}")
+
+    return result
