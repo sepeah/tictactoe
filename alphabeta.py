@@ -94,19 +94,37 @@ class ConnectFour(AlphaBetaNode):
             merkki = 'x'
         else:
             merkki = 'o'
+        
         seuraava_vuoro = not self.crosses_turn
+
+        for i, char in enumerate(self.state):
+                if char == '?':
+                    # laske Manhattan-etäisyys keskustasta (indeksi 12 = rivi 2, sarake 2)
+                    r, c = divmod(i, 5)
+                    distance = abs(r - 2) + abs(c - 2)
+                    
+                    tilanne = self.state[:i] + merkki + self.state[i+1:]
+                    child = ConnectFour(tilanne, seuraava_vuoro)
+                    lapset.append((distance, child))
+    
+        # järjestä lyhimmän etäisyyden mukaan (keskusta ensin)
+        lapset.sort(key=lambda x: x[0])
+        return [move[1] for move in lapset]
+
+    """
+    original version
+
         for i, char in enumerate(self.state):
             if char == '?':
                 tilanne = self.state[:i] + merkki + self.state[i+1:]
                 lapset.append(ConnectFour(tilanne, seuraava_vuoro))
         return lapset
-
+    """
     def value(self):
         """
         Current score of the game (0, 1, -1)
         :return: int
         """
-        # Implement me
         if self.is_end_state():
             if self.won('o'):
                 return -1
