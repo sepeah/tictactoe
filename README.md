@@ -15,6 +15,7 @@ increases the complexity and depth of the game tree significantly.
 ### ✅ Features
 - MinMax algorithm for decision-making
 - Alpha-beta pruning to reduce search space
+- move generation favours centerboard for efficiency
 - End-game search depth reaches 9 with 13 empty cells in reasonable time
 
 ## 🚧 Challenges
@@ -23,11 +24,12 @@ Despite pruning, the search tree remains large, especially from an empty board. 
 and enable full-game play, the following enhancements are under consideration:
 
 - Implementing a **heuristic evaluation function** to complement terminal state scoring (`-1`, `0`, `1`)
-- **Restricting child node generation** to cells adjacent to existing moves (`x` or `o`)
+- A pygame version with graphics and gameplay against the engine
+
 
 ## 📦 How to Run
 
-Clone the repository and run the main script:
+Clone the repository and run the main script to generate a move. To change the starting board edit hardcoded game state test_board:
 
 ```bash
 python main.py
