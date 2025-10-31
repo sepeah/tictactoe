@@ -22,8 +22,6 @@ def play(state):
     """Makes turn and prints the result of it until the game is over
     :param state: The initial state of the game
     """
-    alpha = -1
-    beta = 1
     print(state)
     if state.state == 5*5*"?":
         alkusiirto = state.state[:12] + 'x' + state.state[13:]
@@ -31,21 +29,18 @@ def play(state):
         print(state)
     
     while not state.is_end_state():
-        if state.is_max_node():
-            value, state = max_value(state, alpha, beta)
-        else:
-            value, state = min_value(state, alpha, beta)
+        state, value = nextmove(state)
         print(state)
         print(value)
     
 
-def nextmove(state):
+def nextmove(state, timeout=5.0):
     """Determines the next move for the current player."""
     alpha = -1
     beta = 1
-    value, new_state = alpha_beta_value(state, alpha, beta)
-    print("\nNext move:\n")
-    print(new_state, value)
+    value, new_state = alpha_beta_value(state, timeout=timeout, alpha=alpha, beta=beta)
+    return new_state, value
+    
 
 
 def main():
@@ -53,9 +48,12 @@ def main():
     empty_board = 5*5*"?"
     test_board = "?o?ox?ox?xo?x?o?xo????x??"
 
-    state = ConnectFour(test_board, True)
-    nextmove(state)
-#    play(state)
+    state = ConnectFour(empty_board, True)
+    """print("\nNext move:\n")
+    (newstate, newvalue) = nextmove(state)
+    print(newstate, newvalue)
+    """
+    play(state)
 
 if __name__ == "__main__":
     print("Starting main.py")

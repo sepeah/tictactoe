@@ -1,7 +1,7 @@
 """Module contains AlphaBetaNode class and ConnectFour class that implements it,
 as well as the alpha-beta pruning algorithm functions."""
 
-
+import time
 
 class AlphaBetaNode(object):
     def __init__(self):
@@ -133,8 +133,20 @@ class ConnectFour(AlphaBetaNode):
             else:
                 return 0
 
+""" Global variables for timeouts and tracking search stats"""
+search_start_time = 0
+max_search_time = 0
+timeout_occurred = False
+
 nodes_visited = 0
 nodes_pruned = 0
+
+def check_timeout():
+    """Function to check if search time exceeded"""
+    global timeout_occurred
+    if time.time() - search_start_time > max_search_time:
+        timeout_occurred = True
+        raise TimeoutError("Search timeout")
 
 
 def max_value(node, alpha, beta):
@@ -142,20 +154,29 @@ def max_value(node, alpha, beta):
     Returns (value, best_child_state) for maximizing player (x).
     """
     global nodes_visited, nodes_pruned
+    
+    check_timeout()
+    
     if node.is_end_state():
         nodes_visited += 1
         return node.value(), node
     v = -float('inf')
     best_state = None
     for child in node.generate_children():
-        val, _ = min_value(child, alpha, beta)
-        if val > v:
-            v = val
-            best_state = child
-        alpha = max(alpha, v)
-        if alpha >= beta:
-            nodes_pruned += 1
-            break  # beta-cutoff
+        try:
+            val, _ = min_value(child, alpha, beta)
+            if val > v:
+                v = val
+                best_state = child
+            alpha = max(alpha, v)
+            if alpha >= beta:
+                nodes_pruned += 1
+                break  # beta-cutoff
+        except TimeoutError:
+            # In case of timeout, return the best found so far or the most central possible move 
+            if best_state is None and node.generate_children():
+                best_state = node.generate_children()[0]
+            break
     return v, best_state
 
 def min_value(node, alpha, beta):
@@ -163,27 +184,41 @@ def min_value(node, alpha, beta):
     Returns (value, best_child_state) for minimizing player (o).
     """
     global nodes_visited, nodes_pruned
+
+    check_timeout()
+
     if node.is_end_state():
         nodes_visited += 1
         return node.value(), node
     v = float('inf')
     best_state = None
     for child in node.generate_children():
-        val, _ = max_value(child, alpha, beta)
-        if val < v:
-            v = val
-            best_state = child
-        beta = min(beta, v)
-        if beta <= alpha:
-            nodes_pruned += 1
-            break  # alpha-cutoff
+        try:
+            val, _ = max_value(child, alpha, beta)
+            if val < v:
+                v = val
+                best_state = child
+            beta = min(beta, v)
+            if beta <= alpha:
+                nodes_pruned += 1
+                break  # alpha-cutoff
+        except TimeoutError:
+            # In case of timeout, return the best found so far or the most central possible move 
+            if best_state is None and node.generate_children():
+                best_state = node.generate_children()[0]
+            break   
     return v, best_state
 
-def alpha_beta_value(node, alpha=-float('inf'), beta=float('inf')):
+def alpha_beta_value(node, timeout=3.0, alpha=-float('inf'), beta=float('inf')):
     """
     Wrapper: returns (value, best_child_state) depending on whose turn it is.
     """
-    global nodes_visited, nodes_pruned
+    global search_start_time, max_search_time, timeout_occurred, nodes_visited, nodes_pruned
+
+    search_start_time = time.time()
+    max_search_time = timeout
+    timeout_occurred = False
+
     nodes_visited = 0
     nodes_pruned = 0
 
@@ -192,6 +227,8 @@ def alpha_beta_value(node, alpha=-float('inf'), beta=float('inf')):
     else:
         result = min_value(node, alpha, beta)
 
-    print(f"AlphaBeta stats -> nodes_visited: {nodes_visited}, nodes_pruned: {nodes_pruned}")
+    elapsed_time = time.time() - search_start_time
+    status = " (timed out)" if timeout_occurred else "(inside time limit)"
+    print(f"AlphaBeta stats -> nodes_visited: {nodes_visited}, nodes_pruned: {nodes_pruned}, time: {elapsed_time:.2f}s{status}")
 
     return result
