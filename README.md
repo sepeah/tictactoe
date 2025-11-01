@@ -16,20 +16,24 @@ increases the complexity and depth of the game tree significantly.
 - MinMax algorithm for decision-making
 - Alpha-beta pruning to reduce search space
 - move generation favours centerboard for efficiency
-- End-game search depth reaches 9 with 13 empty cells in reasonable time
+- time-out allows for early game moves to be generated.
 
 ## 🚧 Challenges
 
-Despite pruning, the search tree remains large, especially from an empty board. To improve performance 
-and enable full-game play, the following enhancements are under consideration:
+Despite pruning, the search tree remains large, especially from an empty board. Time-limit and centerboard-first child generation are far from an ideal.
+Changes being considered:
 
 - Implementing a **heuristic evaluation function** to complement terminal state scoring (`-1`, `0`, `1`)
-- A pygame version with graphics and gameplay against the engine
+- Implementing a fast check for obvious winning moves (depth 1-2) in case of time-out.
 
+A pygame version with graphics and gameplay against the engine is in the works.
 
 ## 📦 How to Run
 
-Clone the repository and run the main script to generate a move. To change the starting board edit hardcoded game state test_board:
+Clone the repository and run the main script to generate a game from an empty board with play(state). 
+Use nextmove() to create a single move. See the commented-out section in main.
+To change the game situation edit hardcoded game state test_board.
+To change the time used to search for a move from 5.0 seconds edit the parameter in nextmove(state, timeout=5.0)
 
 ```bash
 python main.py
