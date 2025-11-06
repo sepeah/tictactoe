@@ -1,4 +1,4 @@
-from alphabeta import ConnectFour, max_value, min_value, alpha_beta_value
+from alphabeta import ConnectFour, alpha_beta_value
 
 """
     play(state): makes turn and prints the result of it until the game is over
@@ -34,26 +34,26 @@ def play(state):
         print(value)
     
 
-def nextmove(state, timeout=5.0):
+def nextmove(state, timeout=2.0):
     """Determines the next move for the current player."""
-    alpha = -1
-    beta = 1
+    alpha = -float('inf')
+    beta = float('inf')
     value, new_state = alpha_beta_value(state, timeout=timeout, alpha=alpha, beta=beta)
     return new_state, value
-    
-
 
 def main():
     
     empty_board = 5*5*"?"
-    test_board = "?o?ox?ox?xo?x?o?xo????x??"
-
-    state = ConnectFour(empty_board, True)
-    """print("\nNext move:\n")
+    test_board = "??x??xoxo??oxx??xo?ox?ooo"
+    state = ConnectFour(test_board, True)
+    """
+    print("\nNext move:\n")
     (newstate, newvalue) = nextmove(state)
     print(newstate, newvalue)
     """
+
     play(state)
+
 
 if __name__ == "__main__":
     print("Starting main.py")
@@ -64,3 +64,18 @@ if __name__ == "__main__":
     except Exception:
         import traceback
         traceback.print_exc()
+
+"""
+
+
+    "
+    oxx??
+    oox0?
+    ?oxx?
+    ?xo?o
+    ??xx?
+    "
+
+
+
+"""

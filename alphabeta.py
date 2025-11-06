@@ -1,5 +1,6 @@
 """Module contains AlphaBetaNode class and ConnectFour class that implements it,
-as well as the alpha-beta pruning algorithm functions."""
+as well as the alpha-beta pruning algorithm functions. Time-out handling with a 
+simple fallback to check obvious winning and blocking moves"""
 
 import time
 
@@ -40,14 +41,14 @@ class ConnectFour(AlphaBetaNode):
         board = self.state
         lines = []
 
-        # Rivit
+        # Rows
         for row in range(board_size):
             for col in range(board_size - win_length + 1):
                 start = row * board_size + col
                 line = board[start:start + win_length]
                 lines.append(line)
 
-        # Sarakkeet
+        # columns
         for col in range(board_size):
             for row in range(board_size - win_length + 1):
                 line = ''
@@ -55,7 +56,7 @@ class ConnectFour(AlphaBetaNode):
                     line += board[(row + i) * board_size + col]
                 lines.append(line)
 
-        # Vinot oikealle (↘)
+        # diagonal right (↘)
         for row in range(board_size - win_length + 1):
             for col in range(board_size - win_length + 1):
                 line = ''
@@ -63,7 +64,7 @@ class ConnectFour(AlphaBetaNode):
                     line += board[(row + i) * board_size + (col + i)]
                 lines.append(line)
 
-        # Vinot vasemmalle (↙)
+        # diagonal left (↙)
         for row in range(board_size - win_length + 1):
             for col in range(win_length - 1, board_size):
                 line = ''
@@ -99,7 +100,7 @@ class ConnectFour(AlphaBetaNode):
 
         for i, char in enumerate(self.state):
                 if char == '?':
-                    # laske Manhattan-etäisyys keskustasta (indeksi 12 = rivi 2, sarake 2)
+                    # Manhattan distance from center (index 12 = row 2, column 2)
                     r, c = divmod(i, 5)
                     distance = abs(r - 2) + abs(c - 2)
                     
@@ -107,7 +108,7 @@ class ConnectFour(AlphaBetaNode):
                     child = ConnectFour(tilanne, seuraava_vuoro)
                     lapset.append((distance, child))
     
-        # järjestä lyhimmän etäisyyden mukaan (keskusta ensin)
+        # sorts children by distance to center
         lapset.sort(key=lambda x: x[0])
         return [move[1] for move in lapset]
 
@@ -172,8 +173,9 @@ def max_value(node, alpha, beta):
             if alpha >= beta:
                 nodes_pruned += 1
                 break  # beta-cutoff
+            
         except TimeoutError:
-            # In case of timeout, return the best found so far or the most central possible move 
+            # In case of timeout, return the best found so far or the most central possible move
             if best_state is None and node.generate_children():
                 best_state = node.generate_children()[0]
             break
@@ -202,12 +204,44 @@ def min_value(node, alpha, beta):
             if beta <= alpha:
                 nodes_pruned += 1
                 break  # alpha-cutoff
+            
         except TimeoutError:
             # In case of timeout, return the best found so far or the most central possible move 
             if best_state is None and node.generate_children():
                 best_state = node.generate_children()[0]
             break   
     return v, best_state
+
+def timeout_fallback(node):
+    """Fast analysis in case of time-out. Spots obvious winning and blocking moves"""
+    marker = 'x' if node.crosses_turn else 'o'
+    opponent = 'o' if node.crosses_turn else 'x'
+    next_turn = not node.crosses_turn
+
+    # 1. Check for immediate winning moves
+    for i, char in enumerate(node.state):
+        if char == '?':
+            test_state = node.state[:i] + marker + node.state[i+1:]
+            test_child = ConnectFour(test_state, next_turn)
+            if test_child.won(marker):
+                print("Timeout fallback found the winning move!")
+                return test_child
+    # 2. Check for blocking opponent's winning moves
+    for i, char in enumerate(node.state):
+        if char == '?':
+            # Test if opponent would win at this position
+            opponent_test_state = node.state[:i] + opponent + node.state[i+1:]
+            opponent_test_child = ConnectFour(opponent_test_state, node.crosses_turn)
+            if opponent_test_child.won(opponent):
+                # Block the opponent by playing there ourselves
+                print("Timeout fallback: Blocking opponent's winning move!")
+                blocking_state = node.state[:i] + marker + node.state[i+1:]
+                return ConnectFour(blocking_state, next_turn)
+    # 3. return none, if none found
+    print("no obvious moves in depth 2")
+    return None
+
+
 
 def alpha_beta_value(node, timeout=3.0, alpha=-float('inf'), beta=float('inf')):
     """
@@ -226,9 +260,18 @@ def alpha_beta_value(node, timeout=3.0, alpha=-float('inf'), beta=float('inf')):
         result = max_value(node, alpha, beta)
     else:
         result = min_value(node, alpha, beta)
-
+    
+    if timeout_occurred:
+        print("Timeout occurred - checking for tactical moves")
+        tactical_move = timeout_fallback(node)
+        if tactical_move:
+            result = (0, tactical_move)  # Use obvious move
+        else:
+            # Use whatever alpha-beta found before timeout
+            children = node.generate_children()
+            result = (0, children[0] if children else node)
+    
     elapsed_time = time.time() - search_start_time
-    status = " (timed out)" if timeout_occurred else "(inside time limit)"
-    print(f"AlphaBeta stats -> nodes_visited: {nodes_visited}, nodes_pruned: {nodes_pruned}, time: {elapsed_time:.2f}s{status}")
-
+    status = " (timed out)" if timeout_occurred else ""
+    print(f"AlphaBeta stats - nodes_visited: {nodes_visited}, nodes_pruned: {nodes_pruned}, time: {elapsed_time:.2f}s{status}")
     return result
