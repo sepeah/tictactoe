@@ -267,9 +267,11 @@ def alpha_beta_value(node, timeout=3.0, alpha=-float('inf'), beta=float('inf')):
         if tactical_move:
             result = (0, tactical_move)  # Use obvious move
         else:
-            # Use whatever alpha-beta found before timeout
-            children = node.generate_children()
-            result = (0, children[0] if children else node)
+            # Use whatever alpha-beta found before timeout or the first move in list
+            value, best_state = result
+            if best_state is None:
+                children = node.generate_children()
+                result = (0, children[0] if children else node)
     
     elapsed_time = time.time() - search_start_time
     status = " (timed out)" if timeout_occurred else ""

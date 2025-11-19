@@ -24,8 +24,8 @@ def play(state):
     """
     print(state)
     if state.state == 5*5*"?":
-        alkusiirto = state.state[:12] + 'x' + state.state[13:]
-        state = ConnectFour(alkusiirto, False)
+        middlefirst = state.state[:12] + 'x' + state.state[13:]
+        state = ConnectFour(middlefirst, False)
         print(state)
     
     while not state.is_end_state():
@@ -34,7 +34,7 @@ def play(state):
         print(value)
     
 
-def nextmove(state, timeout=2.0):
+def nextmove(state, timeout=5.0):
     """Determines the next move for the current player."""
     alpha = -float('inf')
     beta = float('inf')
@@ -44,7 +44,7 @@ def nextmove(state, timeout=2.0):
 def main():
     
     empty_board = 5*5*"?"
-    test_board = "??x??xoxo??oxx??xo?ox?ooo"
+    test_board = "??x??x?xo??oxx??xo?ox?oxo"
     state = ConnectFour(test_board, True)
     """
     print("\nNext move:\n")
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nKeskeytetty (KeyboardInterrupt).")
+        print("\nKeyboardInterrupt")
     except Exception:
         import traceback
         traceback.print_exc()
